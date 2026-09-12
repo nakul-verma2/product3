@@ -1,7 +1,10 @@
+const cron = require("./cron");
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config();
+const websiteRoutes = require("./routes/websites");
+const businessAppRoutes = require("./routes/businessApps");
 
 const app = express();
 
@@ -11,6 +14,9 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+
+app.use("/api/websites", websiteRoutes);
+app.use("/api/monitor/business-app", businessAppRoutes);
 
 // ================================
 // BASIC ROUTES
@@ -47,6 +53,11 @@ const startServer = async () => {
     await mongoose.connect(process.env.MONGO_URI);
 
     console.log("MongoDB connected successfully");
+    // Run website monitoring immediately
+    cron();
+
+    // Run website monitoring every minute
+    setInterval(cron, 60 * 1000);
 
     app.listen(PORT, () => {
       console.log(`Server running on http://localhost:${PORT}`);
