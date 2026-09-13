@@ -1,3 +1,10 @@
+/*
+ * Defines the database structure for monitored websites.
+ * Stores URL, name, status, uptime percentage, and response metrics.
+ * Each website belongs to a specific authenticated user.
+ * Monitoring data is updated automatically by the monitoring engine.
+ */
+
 const mongoose = require("mongoose");
 
 const websiteSchema = new mongoose.Schema(
