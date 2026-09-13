@@ -1,3 +1,10 @@
+/*
+ * Defines the database schema for monitored business applications.
+ * Supports services such as ERP, Tally, CCTV, and payment gateways.
+ * Stores application details, monitoring status, and last check time.
+ * The monitoring engine updates this information automatically.
+ */
+
 const mongoose = require("mongoose");
 
 const businessAppSchema = new mongoose.Schema(
