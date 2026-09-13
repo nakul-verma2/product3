@@ -29,15 +29,27 @@ export default function LoginPage() {
     try {
       const res = await api.login(email.trim(), password);
       const token = res.token || res.accessToken;
-      if (!token) throw { message: "Login succeeded but no token was returned." };
+      if (!token)
+        throw { message: "Login succeeded but no token was returned." };
       localStorage.setItem("token", token);
-      localStorage.setItem("user", JSON.stringify(res.user || { email: email.trim() }));
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          ...(res.user || {}),
+          email: res.user?.email || email.trim(),
+          id: res.user?.id || res.user?._id || res.user?.userId,
+        }),
+      );
       toast("Welcome back.");
       router.push("/dashboard");
     } catch (err) {
       if (err?.status === 401) setError("Invalid email or password.");
-      else if (err?.status === 429) setError(err.message || "Too many attempts. Please wait and retry.");
-      else setError(err?.message || "Could not sign in. Check the backend is running.");
+      else if (err?.status === 429)
+        setError(err.message || "Too many attempts. Please wait and retry.");
+      else
+        setError(
+          err?.message || "Could not sign in. Check the backend is running.",
+        );
     } finally {
       setBusy(false);
     }
@@ -46,7 +58,10 @@ export default function LoginPage() {
   // No backend needed: browse every page with sample data.
   const enterDemo = () => {
     localStorage.setItem("token", DEMO_TOKEN);
-    localStorage.setItem("user", JSON.stringify({ id: "demo-user", email: "demo@example.com" }));
+    localStorage.setItem(
+      "user",
+      JSON.stringify({ id: "demo-user", email: "demo@example.com" }),
+    );
     toast("Demo mode — sample data, no backend needed.");
     router.push("/dashboard");
   };
@@ -70,7 +85,9 @@ export default function LoginPage() {
           </h1>
           <div className="mt-8 max-w-sm rounded-xl border border-zinc-800 bg-zinc-900 p-5">
             <div className="flex items-center justify-between text-sm">
-              <span className="font-medium text-zinc-200">store.example.com</span>
+              <span className="font-medium text-zinc-200">
+                store.example.com
+              </span>
               <span className="inline-flex items-center gap-1.5 text-xs text-emerald-400">
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
                 Operational
@@ -78,16 +95,56 @@ export default function LoginPage() {
             </div>
             <UptimeBar
               className="mt-3 [&_span]:h-5"
-              segments={["up","up","up","up","down","up","up","up","up","up","up","up","up","up","up","up","up","up","up","up","up","up","up","up","up","up","up","up","up","up"]}
+              segments={[
+                "up",
+                "up",
+                "up",
+                "up",
+                "down",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+                "up",
+              ]}
             />
             <div className="mt-3 flex gap-6 text-xs tabular-nums text-zinc-400">
-              <span><span className="font-semibold text-zinc-100">99.98%</span> · 90d</span>
-              <span><span className="font-semibold text-zinc-100">212ms</span> avg</span>
-              <span><span className="font-semibold text-zinc-100">1</span> incident</span>
+              <span>
+                <span className="font-semibold text-zinc-100">99.98%</span> ·
+                90d
+              </span>
+              <span>
+                <span className="font-semibold text-zinc-100">212ms</span> avg
+              </span>
+              <span>
+                <span className="font-semibold text-zinc-100">1</span> incident
+              </span>
             </div>
           </div>
         </div>
-        <p className="text-xs text-zinc-600">Minute checks · Instant alerts · ISO audit reports</p>
+        <p className="text-xs text-zinc-600">
+          Minute checks · Instant alerts · ISO audit reports
+        </p>
       </div>
 
       {/* Form */}
@@ -99,11 +156,15 @@ export default function LoginPage() {
           className="w-full max-w-sm"
         >
           <h2 className="text-xl font-semibold text-zinc-900">Sign in</h2>
-          <p className="mt-1 text-sm text-zinc-500">Access your monitoring workspace.</p>
+          <p className="mt-1 text-sm text-zinc-500">
+            Access your monitoring workspace.
+          </p>
 
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div>
-              <label className="mb-1 block text-sm font-medium text-zinc-700">Email</label>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">
+                Email
+              </label>
               <input
                 type="email"
                 autoComplete="email"
@@ -114,7 +175,9 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="mb-1 block text-sm font-medium text-zinc-700">Password</label>
+              <label className="mb-1 block text-sm font-medium text-zinc-700">
+                Password
+              </label>
               <div className="relative">
                 <input
                   type={showPw ? "text" : "password"}
@@ -130,7 +193,11 @@ export default function LoginPage() {
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
                   aria-label={showPw ? "Hide password" : "Show password"}
                 >
-                  {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPw ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -147,7 +214,7 @@ export default function LoginPage() {
               disabled={busy}
               className={cx(
                 "flex w-full items-center justify-center gap-2 rounded-lg bg-zinc-950 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-zinc-800",
-                busy && "opacity-70"
+                busy && "opacity-70",
               )}
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
@@ -162,7 +229,8 @@ export default function LoginPage() {
             Explore demo — no sign-in needed
           </button>
           <p className="mt-4 text-xs text-zinc-500">
-            Backend must be running at {process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}.
+            Backend must be running at{" "}
+            {process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"}.
           </p>
         </motion.div>
       </div>
