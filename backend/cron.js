@@ -1,3 +1,10 @@
+/*
+ * Automated monitoring engine for websites and business applications.
+ * It periodically checks service availability and measures response time.
+ * Monitoring results are stored as uptime logs and website statistics.
+ * It also creates or resolves incidents based on service status.
+ */
+
 const axios = require("axios");
 
 const Website = require("./models/Website");
