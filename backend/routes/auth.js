@@ -1,3 +1,10 @@
+/*
+ * Provides authentication APIs for user registration and login.
+ * Handles password hashing and credential verification.
+ * Generates JWT tokens after successful authentication.
+ * These tokens are used to access protected backend APIs.
+ */
+
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
