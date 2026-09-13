@@ -1,7 +1,11 @@
 const express = require("express");
 const BusinessApp = require("../models/BusinessApp");
+const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
+
+// All business application routes require authentication
+router.use(protect);
 
 // Add a business application
 router.post("/add", async (req, res) => {
@@ -15,17 +19,8 @@ router.post("/add", async (req, res) => {
       });
     }
 
-    // Temporary userId for API development.
-    // This will be replaced with req.user.userId
-    // after authentication middleware is merged.
-    const userId = req.body.userId;
-
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "userId is required",
-      });
-    }
+    // Get userId from authenticated JWT
+    const userId = req.user.userId;
 
     const businessApp = await BusinessApp.create({
       userId,
@@ -52,17 +47,8 @@ router.post("/add", async (req, res) => {
 // List user's business applications
 router.get("/list", async (req, res) => {
   try {
-    // Temporary userId for API development.
-    // This will be replaced with req.user.userId
-    // after authentication middleware is merged.
-    const userId = req.query.userId;
-
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "userId is required",
-      });
-    }
+    // Get userId from authenticated JWT
+    const userId = req.user.userId;
 
     const businessApps = await BusinessApp.find({ userId }).sort({
       createdAt: -1,

@@ -26,6 +26,11 @@ const websiteSchema = new mongoose.Schema(
       default: "up",
     },
 
+    paused: {
+      type: Boolean,
+      default: false,
+    },
+
     uptimePercent: {
       type: Number,
       default: 100,

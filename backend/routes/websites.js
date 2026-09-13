@@ -1,8 +1,14 @@
 const express = require("express");
+const mongoose = require("mongoose");
+
 const Website = require("../models/Website");
 const UptimeLog = require("../models/UptimeLog");
+const protect = require("../middleware/authMiddleware");
 
 const router = express.Router();
+
+// All website routes require authentication
+router.use(protect);
 
 // Add a website
 router.post("/add", async (req, res) => {
@@ -16,17 +22,7 @@ router.post("/add", async (req, res) => {
       });
     }
 
-    // Temporary userId for API development.
-    // This will be replaced with req.user.userId
-    // after the authentication middleware is merged.
-    const userId = req.body.userId;
-
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "userId is required",
-      });
-    }
+    const userId = req.user.userId;
 
     const website = await Website.create({
       userId,
@@ -52,14 +48,7 @@ router.post("/add", async (req, res) => {
 // List user's websites
 router.get("/list", async (req, res) => {
   try {
-    const userId = req.query.userId;
-
-    if (!userId) {
-      return res.status(400).json({
-        success: false,
-        message: "userId is required",
-      });
-    }
+    const userId = req.user.userId;
 
     const websites = await Website.find({ userId }).sort({
       createdAt: -1,
@@ -79,11 +68,120 @@ router.get("/list", async (req, res) => {
   }
 });
 
+// Delete website
+router.delete("/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid website ID",
+      });
+    }
+
+    const website = await Website.findOne({
+      _id: id,
+      userId: req.user.userId,
+    });
+
+    if (!website) {
+      return res.status(404).json({
+        success: false,
+        message: "Website not found",
+      });
+    }
+
+    await UptimeLog.deleteMany({
+      websiteId: id,
+    });
+
+    await Website.findByIdAndDelete(id);
+
+    res.json({
+      success: true,
+      message: "Website deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete website error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete website",
+    });
+  }
+});
+
+// Pause / Resume website monitoring
+router.patch("/:id/pause", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid website ID",
+      });
+    }
+
+    const website = await Website.findOne({
+      _id: id,
+      userId: req.user.userId,
+    });
+
+    if (!website) {
+      return res.status(404).json({
+        success: false,
+        message: "Website not found",
+      });
+    }
+
+    website.paused = !website.paused;
+
+    await website.save();
+
+    res.json({
+      success: true,
+      message: website.paused
+        ? "Website monitoring paused"
+        : "Website monitoring resumed",
+      paused: website.paused,
+    });
+  } catch (error) {
+    console.error("Pause website error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update website monitoring",
+    });
+  }
+});
+
 // Get website uptime logs
 router.get("/:id/logs", async (req, res) => {
   try {
     const { id } = req.params;
     const days = Number(req.query.days) || 7;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid website ID",
+      });
+    }
+
+    // Make sure the website belongs to the logged-in user
+    const website = await Website.findOne({
+      _id: id,
+      userId: req.user.userId,
+    });
+
+    if (!website) {
+      return res.status(404).json({
+        success: false,
+        message: "Website not found",
+      });
+    }
 
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
