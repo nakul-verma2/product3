@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Next.js build output
+.next/
+out/
+
+# Secrets — never commit (see docs/ENV_SETUP.md)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# Generated audit PDFs (regenerable via GET /api/audit/report/generate)
+backend/public/reports/*.pdf
+
+# OS
+.DS_Store
+Thumbs.db

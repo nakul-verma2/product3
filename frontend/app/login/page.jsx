@@ -15,8 +15,14 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
+  const [mode, setMode] = useState("login"); // "login" | "register"
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+
+  const switchMode = (next) => {
+    setMode(next);
+    setError("");
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -25,19 +31,27 @@ export default function LoginPage() {
       setError("Enter your email and password.");
       return;
     }
+    if (mode === "register" && password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
     setBusy(true);
     try {
-      const res = await api.login(email.trim(), password);
+      const res =
+        mode === "login"
+          ? await api.login(email.trim(), password)
+          : await api.register(email.trim(), password);
       const token = res.token || res.accessToken;
-      if (!token) throw { message: "Login succeeded but no token was returned." };
+      if (!token) throw { message: "Server did not return a token." };
       localStorage.setItem("token", token);
       localStorage.setItem("user", JSON.stringify(res.user || { email: email.trim() }));
-      toast("Welcome back.");
+      toast(mode === "login" ? "Welcome back." : "Account created.");
       router.push("/dashboard");
     } catch (err) {
       if (err?.status === 401) setError("Invalid email or password.");
+      else if (err?.status === 409) setError("That email is already registered. Try signing in.");
       else if (err?.status === 429) setError(err.message || "Too many attempts. Please wait and retry.");
-      else setError(err?.message || "Could not sign in. Check the backend is running.");
+      else setError(err?.message || "Could not reach the backend. Is it running?");
     } finally {
       setBusy(false);
     }
@@ -98,8 +112,14 @@ export default function LoginPage() {
           transition={{ duration: 0.18 }}
           className="w-full max-w-sm"
         >
-          <h2 className="text-xl font-semibold text-zinc-900">Sign in</h2>
-          <p className="mt-1 text-sm text-zinc-500">Access your monitoring workspace.</p>
+          <h2 className="text-xl font-semibold text-zinc-900">
+            {mode === "login" ? "Sign in" : "Create account"}
+          </h2>
+          <p className="mt-1 text-sm text-zinc-500">
+            {mode === "login"
+              ? "Access your monitoring workspace."
+              : "Set up your monitoring workspace."}
+          </p>
 
           <form onSubmit={submit} className="mt-6 space-y-4">
             <div>
@@ -133,6 +153,9 @@ export default function LoginPage() {
                   {showPw ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
+              {mode === "register" ? (
+                <p className="mt-1 text-xs text-zinc-500">Minimum 8 characters.</p>
+              ) : null}
             </div>
 
             {error ? (
@@ -151,9 +174,22 @@ export default function LoginPage() {
               )}
             >
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {busy ? "Signing in…" : "Sign in"}
+              {busy
+                ? mode === "login"
+                  ? "Signing in…"
+                  : "Creating account…"
+                : mode === "login"
+                  ? "Sign in"
+                  : "Create account"}
             </motion.button>
           </form>
+
+          <button
+            onClick={() => switchMode(mode === "login" ? "register" : "login")}
+            className="mt-3 w-full rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-medium text-zinc-700 transition hover:bg-zinc-50 active:scale-[0.98]"
+          >
+            {mode === "login" ? "New here? Create an account" : "Have an account? Sign in"}
+          </button>
 
           <button
             onClick={enterDemo}
