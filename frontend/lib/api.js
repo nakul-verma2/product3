@@ -70,41 +70,83 @@ const unwrap = (p) => p.then((r) => r.data);
 const baseApi = {
   login: (email, password) =>
     unwrap(apiClient.post("/auth/login", { email, password })),
+
   register: (email, password) =>
     unwrap(apiClient.post("/auth/register", { email, password })),
 
-  listWebsites: () => unwrap(apiClient.get("/websites/list")),
-  getWebsite: (id) => unwrap(apiClient.get(`/websites/${id}`)),
-  // Keep payloads small: cap limit, downsample client-side in lib/format.js
+  listWebsites: () =>
+    unwrap(apiClient.get("/websites/list")),
+
+  getWebsite: async (id) => {
+    const data = await unwrap(apiClient.get("/websites/list"));
+
+    const websites = data.websites || [];
+
+    return {
+      ...data,
+      website: websites.find((website) => website._id === id) || null,
+    };
+  },
+
   getLogs: (id, { days = 7, page = 1, limit = 200 } = {}) =>
-    unwrap(apiClient.get(`/websites/${id}/logs`, { params: { days, page, limit } })),
-  addWebsite: (name, url) => unwrap(apiClient.post("/websites/add", { name, url })),
-  deleteWebsite: (id) => unwrap(apiClient.delete(`/websites/${id}`)),
-  togglePause: (id, isPaused) =>
-    unwrap(apiClient.patch(`/websites/${id}/pause`, { isPaused })),
+    unwrap(
+      apiClient.get(`/websites/${id}/logs`, {
+        params: { days, page, limit },
+      })
+    ),
 
-  getSummary: () => unwrap(apiClient.get("/dashboard/summary")),
+  addWebsite: (name, url) =>
+    unwrap(apiClient.post("/websites/add", { name, url })),
 
-  listBusinessApps: () => unwrap(apiClient.get("/monitor/business-app/list")),
+  deleteWebsite: (id) =>
+    unwrap(apiClient.delete(`/websites/${id}`)),
+
+  togglePause: (id) =>
+    unwrap(apiClient.patch(`/websites/${id}/pause`)),
+
+  getSummary: () =>
+    unwrap(apiClient.get("/dashboard/summary")),
+
+  listBusinessApps: () =>
+    unwrap(apiClient.get("/monitor/business-app/list")),
+
   addBusinessApp: ({ name, url, type }) =>
-    unwrap(apiClient.post("/monitor/business-app/add", { name, url, type })),
+    unwrap(
+      apiClient.post("/monitor/business-app/add", {
+        name,
+        url,
+        type,
+      })
+    ),
+
   deleteBusinessApp: (id) =>
     unwrap(apiClient.delete(`/monitor/business-app/${id}`)),
 
   generateAudit: (period = "12months") =>
     unwrap(
-      apiClient.get("/audit/report/generate", { params: { period }, timeout: 60000 })
+      apiClient.get("/audit/report/generate", {
+        params: { period },
+        timeout: 60000,
+      })
     ),
-  listAudits: () => unwrap(apiClient.get("/audit/reports/list")),
 
-  getAlertSettings: () => unwrap(apiClient.get("/alerts/settings")),
+  listAudits: () =>
+    unwrap(apiClient.get("/audit/reports")),
+
+  getAlertSettings: () =>
+    unwrap(apiClient.get("/alert/settings")),
+
   updateAlertSettings: (payload) =>
-    unwrap(apiClient.put("/alerts/settings", payload)),
-  testAlert: (channel) => unwrap(apiClient.post("/alerts/test", { channel })),
+    unwrap(apiClient.put("/alert/settings", payload)),
 
-  getPublicStatus: (userId) => unwrap(publicClient.get(`/status/${userId}`)),
-  getIncidents: (websiteId) =>
-    unwrap(apiClient.get("/incidents", { params: websiteId ? { websiteId } : {} })),
+  testAlert: () =>
+    unwrap(apiClient.post("/alert/test")),
+
+  getPublicStatus: (userId) =>
+    unwrap(publicClient.get(`/status/${userId}`)),
+
+  getIncidents: () =>
+    unwrap(apiClient.get("/incidents/list")),
 };
 
 // Demo mode (no backend): route every call to the in-memory sample store.
