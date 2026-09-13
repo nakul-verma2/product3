@@ -1,3 +1,10 @@
+/*
+ * Authentication middleware used to protect private API routes.
+ * It reads and verifies the JWT token sent by the frontend.
+ * The authenticated user's ID is attached to the request object.
+ * Requests with missing or invalid tokens are rejected.
+ */
+
 const jwt = require("jsonwebtoken");
 
 const protect = (req, res, next) => {
