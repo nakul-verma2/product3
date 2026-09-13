@@ -1,3 +1,10 @@
+/*
+ * Defines the MongoDB schema for application users.
+ * Stores the user's email and securely hashed password.
+ * User records are used during registration and login.
+ * The user ID is also linked with their monitored services.
+ */
+
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
