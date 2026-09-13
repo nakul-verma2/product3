@@ -1,3 +1,10 @@
+/*
+ * Stores individual results generated during website monitoring.
+ * Records status code, response time, availability, and check time.
+ * These logs provide the historical monitoring data for each website.
+ * They are also used to calculate uptime and performance statistics.
+ */
+
 const mongoose = require("mongoose");
 
 const uptimeLogSchema = new mongoose.Schema(
