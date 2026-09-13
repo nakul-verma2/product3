@@ -1,21 +1,36 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
 require("dotenv").config();
 
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+
+const connectDB = require("./config/db");
+const authRoutes = require("./routes/auth");
+const websiteRoutes = require("./routes/websites");
+const businessAppRoutes = require("./routes/businessApps");
+const dashboardRoutes = require("./routes/dashboard");
+const incidentRoutes = require("./routes/incidents");
+const alertRoutes = require("./routes/alerts");
+const cron = require("./cron");
+const statusRoutes = require("./routes/status");
+const auditRoutes = require("./routes/audit");
+//const auditRoutes = require("./routes/audit");
 const app = express();
 
-// ================================
-// MIDDLEWARE
-// ================================
+connectDB();
 
 app.use(cors());
 app.use(express.json());
-
-// ================================
-// BASIC ROUTES
-// ================================
-
+app.use("/reports", express.static("public/reports"));
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/websites", websiteRoutes);
+app.use("/api/audit", auditRoutes);
+app.use("/api/monitor/business-app", businessAppRoutes);
+app.use("/api/status", statusRoutes);
+app.use("/api/audit", auditRoutes);
+app.use("/api/incidents", incidentRoutes);
+app.use("/api/alert", alertRoutes);
 app.get("/", (req, res) => {
   res.json({
     success: true,
@@ -32,29 +47,11 @@ app.get("/health", (req, res) => {
   });
 });
 
-// ================================
-// MONGODB CONNECTION
-// ================================
-
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
-  try {
-    if (!process.env.MONGO_URI) {
-      throw new Error("MONGO_URI is missing in .env file");
-    }
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running on port ${PORT}`);
+});
 
-    await mongoose.connect(process.env.MONGO_URI);
-
-    console.log("MongoDB connected successfully");
-
-    app.listen(PORT, () => {
-      console.log(`Server running on http://localhost:${PORT}`);
-    });
-  } catch (error) {
-    console.error("MongoDB connection failed:");
-    console.error(error.message);
-  }
-};
-
-startServer();
+cron();
+setInterval(cron, 60 * 1000);
