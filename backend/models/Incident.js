@@ -1,3 +1,10 @@
+/*
+ * Stores downtime incidents detected by the monitoring system.
+ * Records when an incident started, ended, and how long it lasted.
+ * Incidents can remain ongoing until the service becomes available again.
+ * Root-cause information can also be associated with an incident.
+ */
+
 const mongoose = require("mongoose");
 
 const incidentSchema = new mongoose.Schema(
