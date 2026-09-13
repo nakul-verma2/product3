@@ -74,29 +74,39 @@ const baseApi = {
   register: (email, password) =>
     unwrap(apiClient.post("/auth/register", { email, password })),
 
-  listWebsites: () =>
-    unwrap(apiClient.get("/websites/list")),
-
-  getWebsite: async (id) => {
+  listWebsites: async () => {
     const data = await unwrap(apiClient.get("/websites/list"));
-
-    const websites = data.websites || [];
-
-    return {
-      ...data,
-      website: websites.find((website) => website._id === id) || null,
-    };
+    return data.websites || [];
   },
 
-  getLogs: (id, { days = 7, page = 1, limit = 200 } = {}) =>
-    unwrap(
+  getWebsite: async (id) => {
+    const websites = await baseApi.listWebsites();
+
+    return websites.find(
+      (website) => website._id === id
+    ) || null;
+  },
+
+  getLogs: async (
+    id,
+    { days = 7, page = 1, limit = 200 } = {}
+  ) => {
+    const data = await unwrap(
       apiClient.get(`/websites/${id}/logs`, {
         params: { days, page, limit },
       })
-    ),
+    );
 
-  addWebsite: (name, url) =>
-    unwrap(apiClient.post("/websites/add", { name, url })),
+    return data.logs || [];
+  },
+
+  addWebsite: async (name, url) => {
+    const data = await unwrap(
+      apiClient.post("/websites/add", { name, url })
+    );
+
+    return data.website;
+  },
 
   deleteWebsite: (id) =>
     unwrap(apiClient.delete(`/websites/${id}`)),
@@ -107,8 +117,13 @@ const baseApi = {
   getSummary: () =>
     unwrap(apiClient.get("/dashboard/summary")),
 
-  listBusinessApps: () =>
-    unwrap(apiClient.get("/monitor/business-app/list")),
+  listBusinessApps: async () => {
+    const data = await unwrap(
+      apiClient.get("/monitor/business-app/list")
+    );
+
+    return data.apps || data.businessApps || [];
+  },
 
   addBusinessApp: ({ name, url, type }) =>
     unwrap(
@@ -120,7 +135,9 @@ const baseApi = {
     ),
 
   deleteBusinessApp: (id) =>
-    unwrap(apiClient.delete(`/monitor/business-app/${id}`)),
+    unwrap(
+      apiClient.delete(`/monitor/business-app/${id}`)
+    ),
 
   generateAudit: (period = "12months") =>
     unwrap(
@@ -130,23 +147,63 @@ const baseApi = {
       })
     ),
 
-  listAudits: () =>
-    unwrap(apiClient.get("/audit/reports")),
+  listAudits: async () => {
+    const data = await unwrap(
+      apiClient.get("/audit/reports")
+    );
 
-  getAlertSettings: () =>
-    unwrap(apiClient.get("/alert/settings")),
+    return data.reports || [];
+  },
 
-  updateAlertSettings: (payload) =>
-    unwrap(apiClient.put("/alert/settings", payload)),
+  getAlertSettings: async () => {
+    const data = await unwrap(
+      apiClient.get("/alert/settings")
+    );
 
-  testAlert: () =>
-    unwrap(apiClient.post("/alert/test")),
+    return data.settings || {};
+  },
 
-  getPublicStatus: (userId) =>
-    unwrap(publicClient.get(`/status/${userId}`)),
+  updateAlertSettings: async (payload) => {
+    const data = await unwrap(
+      apiClient.put("/alert/settings", payload)
+    );
 
-  getIncidents: () =>
-    unwrap(apiClient.get("/incidents/list")),
+    return data.settings || {};
+  },
+
+  testAlert: async () => {
+    return unwrap(
+      apiClient.post("/alert/test")
+    );
+  },
+
+  getPublicStatus: async (userId) => {
+    const data = await unwrap(
+      publicClient.get(`/status/${userId}`)
+    );
+
+    return {
+      userId,
+      overall: data.status?.overall || "operational",
+      services: data.websites || [],
+    };
+  },
+
+  getIncidents: async (websiteId) => {
+    const data = await unwrap(
+      apiClient.get("/incidents/list")
+    );
+
+    const incidents = data.incidents || [];
+
+    if (!websiteId) {
+      return incidents;
+    }
+
+    return incidents.filter(
+      (incident) => incident.websiteId === websiteId
+    );
+  },
 };
 
 // Demo mode (no backend): route every call to the in-memory sample store.
